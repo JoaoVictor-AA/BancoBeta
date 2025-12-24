@@ -2,30 +2,34 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from decimal import Decimal
 from pydantic.types import conint
 
 class UserOut(BaseModel):
     name: str
     id: int
-
+    class Config:
+        orm_mode = True
 
 class CreateUser(BaseModel):
     name: str
     password: str
-    email: str
+    email: EmailStr
 
 
 class MakeTransaction(BaseModel):
     sender_id: int
     receiver_id: int
-    valor: float
+    valor: Decimal
 
 
 class TransactionOut(BaseModel):
     sender_id: int
     receiver_id: int
-    valor: float
+    valor: Decimal
     uuid: UUID
+    class Config:
+        orm_mode = True
 
 
 class Token(BaseModel):
@@ -34,4 +38,4 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    id: Optional[str] = None
+    id: Optional[int] = None
