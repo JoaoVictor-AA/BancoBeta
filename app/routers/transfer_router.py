@@ -13,34 +13,33 @@ router = APIRouter(
 
 
 @router.post("/", response_model=schemas.TransactionOut)
-def make_transaction(transfer: schemas.MakeTransaction, db: Session = Depends(get_db),
-                     current_user: int = Depends(oauth2.get_current_user)):
-    new_transaction = models.Transfer(sender_id=current_user.id, **transfer.dict())
+def make_transaction(transfer: schemas.MakeTransaction, db: Session = Depends(get_db)):
+    new_transaction = models.Transaction(**transfer.dict())
     db.add(new_transaction)
     db.commit()
     db.refresh(new_transaction)
     return new_transaction
 
 @router.get("/{uuid}", response_model=schemas.TransactionOut)
-def get_by_uuid(uuid: UUID, db: Session = Depends(get_db)):
-    transaction = db.query(models.Transfer).filter(models.Transfer.uuid == uuid).first()
+def get_by_uuid(uuid_input: UUID, db: Session = Depends(get_db)):
+    transaction = db.query(models.Transaction).filter(models.Transaction.uuid == uuid_input).first()
     if not transaction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Not found any transaction with identifier {uuid}")
+                            detail=f"Not found any transaction with identifier {uuid_input}")
     return transaction
 
 
 @router.get("/")
-def get_transactions(sender_id: int | None= None, receiver_id: int | None=None, begin_time: date | None=None, end_time: date | None=None, db: Session = Depends(get_db)):
-    query = db.query(models.Transfer)
-    if sender_id:
-        query = query.filter(models.Transfer.sender_id == sender_id)
-    if receiver_id:
-        query = query.filter(models.Transfer.receiver_id == receiver_id)
+def get_transactions(sender_id_input: int | None= None, receiver_id_input: int | None=None, begin_time: date | None=None, end_time: date | None=None, db: Session = Depends(get_db)):
+    query = db.query(models.Transaction)
+    if sender_id_input is not None:
+        query = query.filter(models.Transaction.sender_id == sender_id_input)
+    if receiver_id_input is not None:
+        query = query.filter(models.Transaction.receiver_id == receiver_id_input)
     if begin_time:
-        query = query.filter(models.Transfer.time >= begin_time)
+        query = query.filter(models.Transaction.time >= begin_time)
     if end_time:
         end_time = end_time + timedelta(days=1)
-        query = query.filter(models.Transfer.time <= end_time)
+        query = query.filter(models.Transaction.time <= end_time)
     transactions = query.all()
     return transactions

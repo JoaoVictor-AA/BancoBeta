@@ -13,9 +13,6 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.UserOut)
 def create_user(user: schemas.CreateUser, db: Session = Depends(get_db)):
-    hashed_password = utils.hasher(user.password)
-    user.password = hashed_password
-
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
@@ -40,16 +37,16 @@ def get_user_by_id(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}", response_model=schemas.UserOut)
-def modify_user(id: int, updated_user: schemas.CreateUser, db: Session = Depends(get_db)):
-    to_modify_user = db.query(models.User).filter(models.User.id == id)
+def modify_user(id_input: int, updated_user: schemas.CreateUser, db: Session = Depends(get_db)):
+    to_modify_user = db.query(models.User).filter(models.User.id == id_input).first()
     to_modify_user.update(updated_user.dict(), synchronize_session=False)
     db.commit()
     return to_modify_user.first()
 
 
 @router.delete("/{id}", response_model=schemas.UserOut)
-def delete_user(id: int, db: Session = Depends(get_db)):
-    query = db.query(models.User).filter(models.User.id == id)
+def delete_user(id_input: int, db: Session = Depends(get_db)):
+    query = db.query(models.User).filter(models.User.id == id_input)
     query.delete(synchronize_session=False)
     db.commit()
 
